@@ -14,6 +14,7 @@ const detailNextButton = document.getElementById('complete-next-action');
 const taskList = document.getElementById('detail-tasks');
 const playbookList = document.getElementById('detail-playbook');
 const notesContainer = document.getElementById('detail-notes');
+const dossierContainer = document.getElementById('detail-dossier');
 
 let allLeads = [];
 let allPlaybookSteps = [];
@@ -138,6 +139,7 @@ function updateDetailPanel(lead) {
   renderTaskList(lead);
   renderPlaybook(lead);
   renderNotes(lead.id);
+  renderDossier(lead);
 }
 
 function refreshAfterStatusChange(lead) {
@@ -194,6 +196,24 @@ function renderTaskList(lead) {
   });
 }
 
+function renderDossier(lead) {
+  if (!dossierContainer) return;
+  const dossier = getDossierForLead(lead);
+  if (!dossier) {
+    dossierContainer.innerHTML = '<p class=\"muted\">No dossier stored yet.</p>';
+    return;
+  }
+  let html = markdownToHtml(dossier.content);
+  if (dossier.docLink) {
+    html += `
+      <div class=\"dossier-link\">
+        <a href=\"${dossier.docLink}\" target=\"_blank\">Open Google Doc</a>
+      </div>
+    `;
+  }
+  dossierContainer.innerHTML = html;
+}
+
 function renderPlaybook(lead) {
   const steps = getStepsForLead(lead);
   playbookList.innerHTML = '';
@@ -231,6 +251,7 @@ function filterLeads(leads) {
 
 async function loadQueue() {
   try {
+    await fetchDossiers();
     const [leads, playbook] = await Promise.all([fetchLeads(), fetchPlaybookSteps()]);
     allLeads = leads.filter(Boolean);
     allPlaybookSteps = playbook;

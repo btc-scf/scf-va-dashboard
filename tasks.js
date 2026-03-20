@@ -1,8 +1,9 @@
-const columnIds = ['todo', 'in_progress', 'waiting', 'blocked', 'done'];
-const columns = columnIds.reduce((acc, key) => {
-  acc[key] = document.getElementById(`column-${key}`);
-  return acc;
-}, {});
+const cardsContainer = document.getElementById('task-cards');
+const overdueToggle = document.getElementById('overdue-toggle');
+
+if (window.location.hash === '#overdue' && overdueToggle) {
+  overdueToggle.checked = true;
+}
 
 let leadsCache = [];
 let playbookCache = [];
@@ -27,65 +28,92 @@ function getStepsForLead(lead) {
   return prepareLeadSteps(lead, steps);
 }
 
-function determineColumn(lead, step, status, steps) {
-  if (status === 'done') return 'done';
-  const orderValue = stepOrderValue(step.step_label);
-  const priorSteps = steps.filter(other => stepOrderValue(other.step_label) < orderValue);
-  const priorComplete = priorSteps.every(other => getStoredStepStatus(lead.id, other.id) === 'done');
-  if (!priorSteps.length) return 'todo';
-  return priorComplete ? 'in_progress' : 'waiting';
+function isOverdue(lead, step) {
+  const due = computeDueDateForStep(lead, step);
+  if (!due) return false;
+  return due < new Date() && getStoredStepStatus(lead.id, step.id) !== 'done';
 }
 
-function renderBoard() {
-  columnIds.forEach(key => {
-    columns[key].innerHTML = '';
-  });
+function buildCards() {
+  const showOverdueOnly = overdueToggle?.checked || window.location.hash === '#overdue';
+  const cards = [];
   leadsCache.forEach(lead => {
     const steps = getStepsForLead(lead);
-    steps.forEach(step => {
-      const status = getStoredStepStatus(lead.id, step.id);
-      const bucket = determineColumn(lead, step, status, steps);
-      const card = document.createElement('article');
-      card.className = `notion-card ${status === 'done' ? 'task-row-done' : ''}`;
-      card.innerHTML = `
-        <header>
-          <span>${lead.full_name}</span>
-          <strong>${step.step_label}</strong>
-        </header>
-        <p>${step.action}</p>
-        <small>${step.medium || '—'}</small>
-      `;
-      const button = document.createElement('button');
-      button.className = 'pill-button';
-      button.textContent = status === 'done' ? 'Undo' : 'Mark done';
-      button.addEventListener('click', () => {
-        const nextStatus = status === 'done' ? 'pending' : 'done';
-        setStoredStepStatus(lead.id, step.id, nextStatus);
-        renderBoard();
-      });
-      card.appendChild(button);
-      columns[bucket].appendChild(card);
-    });
+    const nextStep = steps.find(step => getStoredStepStatus(lead.id, step.id) !== 'done');
+    const overdue = nextStep ? isOverdue(lead, nextStep) : false;
+    if (showOverdueOnly && !overdue) return;
+    cards.push({ lead, steps, nextStep, overdue });
   });
-  columnIds.forEach(key => {
-    if (!columns[key].children.length) {
-      columns[key].innerHTML = '<p class="muted">No tasks here yet.</p>';
+  cards.sort((a, b) => {
+    if (a.overdue === b.overdue) return (a.nextStep ? stepOrderValue(a.nextStep.step_label) : 999) - (b.nextStep ? stepOrderValue(b.nextStep.step_label) : 999);
+    return a.overdue ? -1 : 1;
+  });
+  renderCards(cards);
+}
+
+function renderCards(cards) {
+  cardsContainer.innerHTML = '';
+  if (!cards.length) {
+    cardsContainer.innerHTML = '<p class="muted">No tasks to show.</p>';
+    return;
+  }
+  cards.forEach(({ lead, steps, nextStep, overdue }) => {
+    const status = nextStep ? getStoredStepStatus(lead.id, nextStep.id) : 'done';
+    const due = nextStep ? computeDueDateForStep(lead, nextStep) : null;
+    const card = document.createElement('article');
+    card.className = `task-card-entry ${overdue ? 'task-card-overdue' : ''}`;
+    card.innerHTML = `
+      <header>
+        <div>
+          <h3>${lead.full_name}</h3>
+          <p class="muted">${lead.company}</p>
+        </div>
+        <span class="status-pill">${lead.status}</span>
+      </header>
+      <div class="task-card-body">
+        <p class="task-label">Next action</p>
+        <strong>${nextStep ? `${nextStep.step_label}. ${nextStep.action}` : 'All steps complete'}</strong>
+        <p class="muted">${due ? `Due ${due.toLocaleDateString()}` : ''}</p>
+      </div>
+      <div class="task-card-actions">
+        <button class="pill-button" data-action="toggle" ${nextStep ? '' : 'disabled'}>${status === 'done' ? 'Undo' : 'Mark done'}</button>
+        <a class="pill-button" href="profile.html?lead_id=${lead.id}" target="_blank">Open profile</a>
+      </div>
+      <details>
+        <summary>View playbook steps</summary>
+        <ul class="task-step-list">
+          ${steps.map(step => {
+            const stepStatus = getStoredStepStatus(lead.id, step.id);
+            return `<li class="${stepStatus === 'done' ? 'step-done' : ''}"><span>${step.step_label}.</span> ${step.action}</li>`;
+          }).join('')}
+        </ul>
+      </details>
+    `;
+    const toggleButton = card.querySelector('button[data-action="toggle"]');
+    if (toggleButton && nextStep) {
+      toggleButton.addEventListener('click', () => {
+        const nextStatus = status === 'done' ? 'pending' : 'done';
+        setStoredStepStatus(lead.id, nextStep.id, nextStatus);
+        buildCards();
+      });
     }
+    cardsContainer.appendChild(card);
   });
 }
 
 async function loadTasksView() {
   try {
+    await fetchDossiers();
     const [leads, playbook] = await Promise.all([fetchLeads(), fetchPlaybookSteps()]);
     leadsCache = leads.filter(Boolean);
     playbookCache = playbook;
     indexPlaybookCache();
-    renderBoard();
+    buildCards();
   } catch (error) {
-    columnIds.forEach(key => {
-      columns[key].innerHTML = `<p class="muted">Unable to load tasks: ${error.message}</p>`;
-    });
+    cardsContainer.innerHTML = `<p class="muted">Unable to load tasks: ${error.message}</p>`;
   }
 }
+
+overdueToggle?.addEventListener('change', buildCards);
 
 loadTasksView();

@@ -1,0 +1,12 @@
+[
+  {
+    "id": "simplecoachfunnel",
+    "name": "SimpleCoachFunnel",
+    "offer": "Done-for-you outreach & Meta ads",
+    "funnel_type": "Apollo + lead magnet + consult",
+    "target_icp": "Solo coaches under 100k followers who sell premium coaching or matchmaking packages",
+    "positioning_notes": "Partner that builds predictable funnels, writes outreach, and keeps the VA on rails.",
+    "outreach_notes": "All leads live in the shared sheet, dossiers, and Supabase; the VA should follow the playbook and log actions.",
+    "active": true
+  }
+]

@@ -1,5 +1,6 @@
 const params = new URLSearchParams(window.location.search);
 const leadId = params.get('lead_id');
+const dossierEl = document.getElementById('profile-dossier');
 
 function formatString(value, fallback = '—') {
   if (value === null || value === undefined || value === 'undefined') return fallback;
@@ -13,6 +14,24 @@ function setStatusChip(text, priority) {
   chip.className = 'profile-status';
   if (priority === 'high') chip.classList.add('priority-high');
   if (priority === 'urgent') chip.classList.add('priority-urgent');
+}
+
+function renderDossierSection(lead) {
+  if (!dossierEl) return;
+  const dossier = getDossierForLead(lead);
+  if (!dossier) {
+    dossierEl.innerHTML = '<p class=\"muted\">No dossier stored yet.</p>';
+    return;
+  }
+  let html = markdownToHtml(dossier.content);
+  if (dossier.docLink) {
+    html += `
+      <div class=\"dossier-link\">
+        <a href=\"${dossier.docLink}\" target=\"_blank\">Open Google Doc</a>
+      </div>
+    `;
+  }
+  dossierEl.innerHTML = html;
 }
 
 function renderPlaybookSteps(lead, steps) {
@@ -92,10 +111,12 @@ async function initProfile() {
   document.getElementById('profile-why').textContent = lead.why_this_lead || '—';
   document.getElementById('profile-angle').textContent = lead.angle_summary || '—';
   document.getElementById('profile-hooks').textContent = lead.personalization_hooks || '—';
+  await fetchDossiers();
   const steps = prepareLeadSteps(lead, await fetchLeadPlaybookSteps(lead.full_name || lead.name));
   renderNextAction(lead, steps);
   renderTasks(lead, steps);
   renderPlaybookSteps(lead, steps);
+  renderDossierSection(lead);
 }
 
 initProfile();

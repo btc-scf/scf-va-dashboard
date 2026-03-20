@@ -3,50 +3,25 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SCF Task Board</title>
+  <title>Tasks · SCF</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body class="simple-page">
   <header class="secondary-header">
-    <a href="index.html" class="control-link">← Back to dashboard</a>
-    <h1>Task Board</h1>
+    <div>
+      <a href="index.html" class="control-link">← Back to Lead Queue</a>
+      <h1>Tasks</h1>
+      <p>Focus mode: see every lead’s next action and overdue items.</p>
+    </div>
+    <div class="task-filter">
+      <label>
+        <input type="checkbox" id="overdue-toggle">
+        Show overdue only
+      </label>
+    </div>
   </header>
-  <main class="board-shell">
-    <section class="board-column" data-status="todo">
-      <header>
-        <h2>To Do</h2>
-        <small>New tasks awaiting planning</small>
-      </header>
-      <div class="column-body" id="column-todo"></div>
-    </section>
-    <section class="board-column" data-status="in_progress">
-      <header>
-        <h2>In Progress</h2>
-        <small>Work being executed</small>
-      </header>
-      <div class="column-body" id="column-in_progress"></div>
-    </section>
-    <section class="board-column" data-status="waiting">
-      <header>
-        <h2>Waiting</h2>
-        <small>Pending replies or assets</small>
-      </header>
-      <div class="column-body" id="column-waiting"></div>
-    </section>
-    <section class="board-column" data-status="blocked">
-      <header>
-        <h2>Blocked</h2>
-        <small>Needs unblocking</small>
-      </header>
-      <div class="column-body" id="column-blocked"></div>
-    </section>
-    <section class="board-column" data-status="done">
-      <header>
-        <h2>Done</h2>
-        <small>Completed tasks</small>
-      </header>
-      <div class="column-body" id="column-done"></div>
-    </section>
+  <main class="task-card-shell">
+    <div id="task-cards" class="task-card-grid"></div>
   </main>
   <script src="common.js"></script>
   <script src="tasks.js"></script>

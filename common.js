@@ -25,6 +25,7 @@ function hydrateLeadRow(row) {
   };
   hydrated.Client = name;
   hydrated.Priority = hydrated.priority;
+  hydrated.client_name = row.client_name || 'SimpleCoachFunnel';
   return hydrated;
 }
 
@@ -198,4 +199,63 @@ function computeDueDateForStep(lead, step) {
   const due = new Date(created);
   due.setDate(due.getDate() + offset);
   return due;
+}
+let dossierCache = null;
+
+async function fetchDossiers() {
+  if (dossierCache) return dossierCache;
+  try {
+    const response = await fetch('data/dossiers.json');
+    if (!response.ok) throw new Error('Missing dossiers dataset');
+    dossierCache = await response.json();
+  } catch (error) {
+    console.warn('Unable to load dossiers', error.message);
+    dossierCache = {};
+  }
+  return dossierCache;
+}
+
+function toSlug(value) {
+  return (value || '').toString().trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
+
+function getDossierForLead(lead) {
+  if (!lead) return null;
+  const slug = toSlug(lead.full_name || lead.name);
+  return (dossierCache && dossierCache[slug]) ? dossierCache[slug] : null;
+}
+
+function markdownToHtml(markdownText) {
+  if (!markdownText) return '';
+  const lines = markdownText.split(/\n/);
+  let html = '';
+  let inList = false;
+  lines.forEach(line => {
+    if (line.startsWith('## ')) {
+      if (inList) {
+        html += '</ul>';
+        inList = false;
+      }
+      html += `<h3>${line.substring(3).trim()}</h3>`;
+    } else if (line.startsWith('- ')) {
+      if (!inList) {
+        html += '<ul>';
+        inList = true;
+      }
+      html += `<li>${line.substring(2).trim()}</li>`;
+    } else if (line.trim() === '') {
+      if (inList) {
+        html += '</ul>';
+        inList = false;
+      }
+    } else {
+      if (inList) {
+        html += '</ul>';
+        inList = false;
+      }
+      html += `<p>${line.trim()}</p>`;
+    }
+  });
+  if (inList) html += '</ul>';
+  return html;
 }
