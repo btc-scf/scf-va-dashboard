@@ -12,6 +12,11 @@ function setupSidebarNav() {
     item.addEventListener('click', () => {
       document.querySelectorAll('.sidebar nav li').forEach(li => li.classList.remove('active'));
       item.classList.add('active');
+      const href = item.dataset.href;
+      const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+      if (href && href !== currentPage) {
+        return;
+      }
       const target = targetMap[item.dataset.target];
       if (target) {
         document.querySelector(target)?.scrollIntoView({ behavior: 'smooth', block: 'start' });

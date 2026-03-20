@@ -33,3 +33,25 @@ async function fetchLeadById(id) {
   const data = await response.json();
   return data[0];
 }
+
+async function fetchTasks(filters = {}) {
+  const params = new URLSearchParams();
+  params.set('select', '*,lead:leads(full_name)');
+  if (filters.status) params.set('status', `eq.${filters.status}`);
+  if (filters.client_id) params.set('client_id', `eq.${filters.client_id}`);
+  const response = await fetch(`${supabaseUrl}/tasks?${params.toString()}&order=priority.desc,due_at.asc`, { headers: supabaseHeaders });
+  if (!response.ok) throw new Error('Failed to load tasks');
+  return response.json();
+}
+
+async function fetchTasksForLead(leadId) {
+  const response = await fetch(`${supabaseUrl}/tasks?lead_id=eq.${leadId}&order=priority.desc,due_at.asc`, { headers: supabaseHeaders });
+  if (!response.ok) throw new Error('Failed to load lead tasks');
+  return response.json();
+}
+
+async function fetchLeadPlaybookSteps(leadId) {
+  const response = await fetch(`${supabaseUrl}/lead_playbook_steps?lead_id=eq.${leadId}&select=*,template_step:playbook_template_steps(step_label,action,medium,goal,step_order)&order=template_step.step_order.asc`, { headers: supabaseHeaders });
+  if (!response.ok) throw new Error('Failed to load playbook steps');
+  return response.json();
+}

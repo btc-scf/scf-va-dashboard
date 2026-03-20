@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SCF Lead Profile</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="simple-page">
+  <header class="secondary-header">
+    <a href="leads.html" class="control-link">← Back to lead queue</a>
+    <h1 id="profile-name">Lead profile</h1>
+    <div class="profile-status" id="profile-status"></div>
+  </header>
+  <main class="profile-shell">
+    <section class="profile-columns">
+      <article class="profile-card">
+        <h2>Why this lead?</h2>
+        <p id="profile-why">Loading...</p>
+      </article>
+      <article class="profile-card">
+        <h2>Recommended angle</h2>
+        <p id="profile-angle">—</p>
+      </article>
+      <article class="profile-card">
+        <h2>Personalization hooks</h2>
+        <p id="profile-hooks">—</p>
+      </article>
+    </section>
+    <section class="profile-section">
+      <h2>Playbook steps</h2>
+      <div id="profile-playbook" class="playbook-list"></div>
+    </section>
+    <section class="profile-section">
+      <h2>Tasks</h2>
+      <div id="profile-tasks" class="task-list"></div>
+    </section>
+  </main>
+  <script src="common.js"></script>
+  <script src="profile.js"></script>
+</body>
+</html>
