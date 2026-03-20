@@ -16,173 +16,267 @@ const playbookList = document.getElementById('detail-playbook');
 const notesContainer = document.getElementById('detail-notes');
 
 let allLeads = [];
+let allPlaybookSteps = [];
+let playbookByLead = new Map();
 let nextActionMap = new Map();
 let currentLeadId = null;
+let currentLeadRecord = null;
 let searchTimeout;
 
-function formatString(value, fallback = '—') {
-  return value && value !== 'undefined' ? value : fallback;
+function normalizeKey(value) {
+  return normalizeLeadName(value);
 }
 
-function buildNextActionMap(tasks) {
+function indexPlaybookSteps() {
+  playbookByLead = new Map();
+  allPlaybookSteps.forEach(step => {
+    const key = normalizeKey(step.lead_name);
+    if (!playbookByLead.has(key)) playbookByLead.set(key, []);
+    playbookByLead.get(key).push(step);
+  });
+}
+
+function getStepsForLead(lead) {
+  if (!lead) return [];
+  const key = normalizeKey(lead.full_name || lead.name);
+  const steps = playbookByLead.get(key) || [];
+  return prepareLeadSteps(lead, steps);
+}
+
+function buildNextActionMap(leads) {
   const map = new Map();
-  const pending = tasks
-    .filter(task => task.status !== 'done')
-    .sort((a, b) => {
-      if (a.due_at && b.due_at) return new Date(a.due_at) - new Date(b.due_at);
-      if (a.due_at) return -1;
-      if (b.due_at) return 1;
-      return 0;
-    });
-  pending.forEach(task => {
-    if (!map.has(task.lead_id)) {
-      map.set(task.lead_id, task);
+  leads.forEach(lead => {
+    const steps = getStepsForLead(lead);
+    const nextStep = steps.find(step => getStoredStepStatus(lead.id, step.id) !== 'done');
+    if (nextStep) {
+      map.set(lead.id, {
+        step: nextStep,
+        title: `${nextStep.step_label}. ${nextStep.action}`,
+        due_at: computeDueDateForStep(lead, nextStep)
+      });
     }
   });
   return map;
 }
 
+function formatString(value, fallback = '—') {
+  if (value === null || value === undefined || value === 'undefined') return fallback;
+  if (typeof value === 'string' && !value.trim()) return fallback;
+  return value;
+}
+
 function renderTable(leads) {
   queueBody.innerHTML = '';
   if (!leads.length) {
-    queueBody.innerHTML = '<tr><td colspan="6" class="muted">No leads match the filters.</td></tr>';
+    queueBody.innerHTML = '<tr><td colspan="6" class="muted">No leads match these filters.</td></tr>';
     return;
   }
   leads.forEach(lead => {
     const tr = document.createElement('tr');
-    const nextAction = nextActionMap.get(lead.id);
-    tr.classList.toggle('selected', lead.id === currentLeadId);
     tr.dataset.leadId = lead.id;
+    const nextAction = nextActionMap.get(lead.id);
     tr.innerHTML = `
       <td>${formatString(lead.full_name, 'Name unknown')}</td>
       <td>${formatString(lead.company, 'Company n/a')}</td>
       <td>${formatString(lead.title, 'Title n/a')}</td>
       <td>${formatString(lead.status)}</td>
       <td>${formatString(lead.priority)}</td>
-      <td>${nextAction ? `${formatString(nextAction.title)}${nextAction.due_at ? ' · due ' + new Date(nextAction.due_at).toLocaleDateString() : ''}` : 'No action yet'}</td>
+      <td>${nextAction ? `${nextAction.title}${nextAction.due_at ? ' · due ' + nextAction.due_at.toLocaleDateString() : ''}` : 'No action yet'}</td>
     `;
     tr.addEventListener('click', () => selectLead(lead));
     queueBody.appendChild(tr);
   });
+  highlightSelectedRow();
 }
 
-async function loadQueue() {
-  allLeads = await fetchLeads();
-  const tasks = await fetchTasks();
-  nextActionMap = buildNextActionMap(tasks);
-  const visibleLeads = filterLeads(allLeads);
-  renderTable(visibleLeads);
-  if (!currentLeadId && visibleLeads.length) {
-    selectLead(visibleLeads[0]);
-  } else if (currentLeadId) {
-    const updatedLead = visibleLeads.find(l => l.id === currentLeadId);
-    if (updatedLead) selectLead(updatedLead);
-  }
-}
-
-function filterLeads(leads) {
-  const status = statusFilter.value;
-  const priority = priorityFilter.value;
-  const search = searchInput.value.toLowerCase();
-  return leads.filter(lead => {
-    if (status && lead.status !== status) return false;
-    if (priority && lead.priority !== priority) return false;
-    if (search) {
-      const haystack = `${lead.full_name} ${lead.company} ${lead.angle_summary || ''}`.toLowerCase();
-      if (!haystack.includes(search)) return false;
-    }
-    return true;
+function highlightSelectedRow() {
+  document.querySelectorAll('#queue-body tr').forEach(row => {
+    row.classList.toggle('selected', row.dataset.leadId === currentLeadId);
   });
 }
 
-async function selectLead(lead) {
-  currentLeadId = lead.id;
-  document.querySelectorAll('#queue-body tr').forEach(row => row.classList.remove('selected'));
-  const row = document.querySelector(`#queue-body tr[data-lead-id="${lead.id}"]`);
-  if (row) row.classList.add('selected');
+function updateDetailPanel(lead) {
+  if (!lead) {
+    detailName.textContent = 'Select a lead';
+    detailCompany.textContent = '—';
+    detailTitle.textContent = '—';
+    detailContact.textContent = '—';
+    detailWhy.textContent = '—';
+    detailAngle.textContent = '—';
+    detailHooks.textContent = '—';
+    detailNextAction.textContent = 'Select a lead to load the next step.';
+    detailNextButton.disabled = true;
+    taskList.innerHTML = '<p class="muted">Select a lead to see tasks.</p>';
+    playbookList.innerHTML = '<p class="muted">Select a lead to see playbook steps.</p>';
+    notesContainer.textContent = 'Notes will appear here.';
+    return;
+  }
   detailName.textContent = formatString(lead.full_name, 'Name missing');
   detailCompany.textContent = formatString(lead.company, 'Company unknown');
   detailTitle.textContent = formatString(lead.title, 'Title unknown');
   const contactParts = [];
   if (lead.email) contactParts.push(`Email: ${lead.email}`);
   if (lead.phone) contactParts.push(`Phone: ${lead.phone}`);
-  if (lead.linkedin_url) contactParts.push(`LinkedIn: ${lead.linkedin_url}`);
-  if (lead.location) contactParts.push(`Location: ${lead.location}`);
-  detailContact.textContent = contactParts.join(' · ') || 'Contact info missing';
-  detailWhy.textContent = formatString(lead.why_this_lead, 'No summary yet.');
-  detailAngle.textContent = formatString(lead.angle_summary, 'Angle needed');
-  detailHooks.textContent = formatString(lead.personalization_hooks, 'No hooks defined');
-  const detailNext = nextActionMap.get(lead.id);
-  if (detailNext) {
-    detailNextAction.textContent = `${detailNext.title} · due ${detailNext.due_at ? new Date(detailNext.due_at).toLocaleDateString() : 'TBD'}`;
+  if (lead.linkedin_url) contactParts.push('LinkedIn profile');
+  if (lead.location) contactParts.push(lead.location);
+  detailContact.textContent = contactParts.join(' · ') || 'No contact info yet. Use dossier + sheet links.';
+  detailWhy.textContent = formatString(lead.why_this_lead, 'Fill in why this lead matters.');
+  detailAngle.textContent = formatString(lead.angle_summary, 'Specify the outreach angle.');
+  detailHooks.textContent = formatString(lead.personalization_hooks, 'Add personalization hooks.');
+  const nextAction = nextActionMap.get(lead.id);
+  if (nextAction) {
+    detailNextAction.textContent = `${nextAction.title}${nextAction.due_at ? ' · due ' + nextAction.due_at.toLocaleDateString() : ''}`;
     detailNextButton.disabled = false;
-    detailNextButton.onclick = async () => {
-      await completeTask(detailNext.id);
-      await loadQueue();
+    detailNextButton.onclick = () => {
+      setStoredStepStatus(lead.id, nextAction.step.id, 'done');
+      refreshAfterStatusChange(lead);
     };
   } else {
-    detailNextAction.textContent = 'No next action yet.';
+    detailNextAction.textContent = 'All steps complete. Move to the next lead.';
     detailNextButton.disabled = true;
   }
-  await renderTaskList(lead.id);
-  await renderPlaybook(lead.id);
-  await renderNotes(lead.id);
+  renderTaskList(lead);
+  renderPlaybook(lead);
+  renderNotes(lead.id);
 }
 
-async function renderTaskList(leadId) {
-  const tasks = await fetchTasksForLead(leadId);
-  taskList.innerHTML = '';
-  if (!tasks.length) {
-    taskList.innerHTML = '<p class="muted">No tasks yet for this lead.</p>';
-    return;
-  }
-  tasks.forEach(task => {
-    const row = document.createElement('div');
-    row.className = 'task-row';
-    row.innerHTML = `
-      <strong>${formatString(task.title)}</strong>
-      <p>Status: ${formatString(task.status)}</p>
-      <p class="muted">${task.due_at ? 'Due ' + new Date(task.due_at).toLocaleDateString() : 'No due date'}</p>
-    `;
-    taskList.appendChild(row);
-  });
-}
-
-async function renderPlaybook(leadId) {
-  const steps = await fetchLeadPlaybookSteps(leadId);
-  playbookList.innerHTML = '';
-  if (!steps.length) {
-    playbookList.innerHTML = '<p class="muted">No playbook steps yet.</p>';
-    return;
-  }
-  steps.forEach(step => {
-    const card = document.createElement('div');
-    card.className = 'playbook-card';
-    card.innerHTML = `<h4>${formatString(step.template_step?.step_label, 'Step')}</h4><p>${formatString(step.template_step?.action, 'Action TBD')}</p><small>${formatString(step.status)}</small>`;
-    playbookList.appendChild(card);
-  });
+function refreshAfterStatusChange(lead) {
+  nextActionMap = buildNextActionMap(allLeads);
+  const visibleLeads = filterLeads(allLeads);
+  renderTable(visibleLeads);
+  const updatedLead = allLeads.find(item => item.id === lead.id) || lead;
+  currentLeadRecord = updatedLead;
+  updateDetailPanel(updatedLead);
 }
 
 async function renderNotes(leadId) {
   const notes = await fetchLeadNotes(leadId);
   notesContainer.innerHTML = '';
   if (!notes.length) {
-    notesContainer.textContent = 'No notes yet.';
+    notesContainer.textContent = 'No notes yet. Capture objections or learnings in the tracker.';
     return;
   }
   notes.forEach(note => {
     const div = document.createElement('div');
     div.className = 'task-row';
-    div.innerHTML = `<p>${note.body}</p><small>Type: ${formatString(note.note_type)} · ${new Date(note.created_at).toLocaleString()}</small>`;
+    div.innerHTML = `<p>${note.body}</p><small>${note.note_type || 'general'} · ${new Date(note.created_at).toLocaleString()}</small>`;
     notesContainer.appendChild(div);
   });
 }
 
-statusFilter.addEventListener('change', loadQueue);
-priorityFilter.addEventListener('change', loadQueue);
+function renderTaskList(lead) {
+  const steps = getStepsForLead(lead);
+  taskList.innerHTML = '';
+  if (!steps.length) {
+    taskList.innerHTML = '<p class="muted">No tasks available for this lead.</p>';
+    return;
+  }
+  steps.forEach(step => {
+    const status = getStoredStepStatus(lead.id, step.id);
+    const row = document.createElement('div');
+    row.className = `task-row ${status === 'done' ? 'task-row-done' : ''}`;
+    row.innerHTML = `
+      <div>
+        <strong>${step.step_label}. ${step.action}</strong>
+        <p class="muted">${step.medium}</p>
+      </div>
+    `;
+    const button = document.createElement('button');
+    button.className = 'pill-button';
+    button.textContent = status === 'done' ? 'Undo' : 'Mark done';
+    button.addEventListener('click', () => {
+      const nextStatus = status === 'done' ? 'pending' : 'done';
+      setStoredStepStatus(lead.id, step.id, nextStatus);
+      refreshAfterStatusChange(lead);
+    });
+    row.appendChild(button);
+    taskList.appendChild(row);
+  });
+}
+
+function renderPlaybook(lead) {
+  const steps = getStepsForLead(lead);
+  playbookList.innerHTML = '';
+  if (!steps.length) {
+    playbookList.innerHTML = '<p class="muted">No playbook steps configured.</p>';
+    return;
+  }
+  steps.forEach(step => {
+    const status = getStoredStepStatus(lead.id, step.id);
+    const card = document.createElement('div');
+    card.className = `playbook-card ${status === 'done' ? 'playbook-card-complete' : ''}`;
+    card.innerHTML = `
+      <h4>${step.step_label}. ${step.action}</h4>
+      <p><strong>Medium:</strong> ${step.medium || '—'}</p>
+      <p>${step.message || step.notes || 'Follow the client playbook.'}</p>
+    `;
+    playbookList.appendChild(card);
+  });
+}
+
+function filterLeads(leads) {
+  const status = statusFilter.value;
+  const priority = priorityFilter.value;
+  const search = searchInput.value.toLowerCase().trim();
+  return leads.filter(lead => {
+    if (status && lead.status !== status) return false;
+    if (priority && lead.priority !== priority) return false;
+    if (search) {
+      const haystack = `${lead.full_name} ${lead.company} ${lead.offer || ''} ${lead.angle_summary || ''}`.toLowerCase();
+      if (!haystack.includes(search)) return false;
+    }
+    return true;
+  });
+}
+
+async function loadQueue() {
+  try {
+    const [leads, playbook] = await Promise.all([fetchLeads(), fetchPlaybookSteps()]);
+    allLeads = leads.filter(Boolean);
+    allPlaybookSteps = playbook;
+    indexPlaybookSteps();
+    nextActionMap = buildNextActionMap(allLeads);
+    const visibleLeads = filterLeads(allLeads);
+    renderTable(visibleLeads);
+    if (!currentLeadId && visibleLeads.length) {
+      selectLead(visibleLeads[0]);
+    } else if (currentLeadId) {
+      const existing = allLeads.find(lead => lead.id === currentLeadId);
+      if (existing) selectLead(existing);
+    }
+  } catch (error) {
+    console.error('Queue load failed', error);
+    queueBody.innerHTML = `<tr><td colspan="6">Unable to load queue: ${error.message}</td></tr>`;
+  }
+}
+
+function selectLead(lead) {
+  if (!lead) return;
+  currentLeadId = lead.id;
+  currentLeadRecord = lead;
+  highlightSelectedRow();
+  updateDetailPanel(lead);
+}
+
+statusFilter.addEventListener('change', () => {
+  const visible = filterLeads(allLeads);
+  nextActionMap = buildNextActionMap(allLeads);
+  renderTable(visible);
+});
+
+priorityFilter.addEventListener('change', () => {
+  const visible = filterLeads(allLeads);
+  nextActionMap = buildNextActionMap(allLeads);
+  renderTable(visible);
+});
+
 searchInput.addEventListener('input', () => {
   clearTimeout(searchTimeout);
-  searchTimeout = setTimeout(loadQueue, 200);
+  searchTimeout = setTimeout(() => {
+    const visible = filterLeads(allLeads);
+    nextActionMap = buildNextActionMap(allLeads);
+    renderTable(visible);
+  }, 200);
 });
 
 loadQueue();

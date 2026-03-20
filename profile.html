@@ -8,8 +8,11 @@
 </head>
 <body class="simple-page">
   <header class="secondary-header">
-    <a href="leads.html" class="control-link">← Back to lead queue</a>
-    <h1 id="profile-name">Lead profile</h1>
+    <a href="index.html" class="control-link">← Back to lead queue</a>
+    <div>
+      <h1 id="profile-name">Lead profile</h1>
+      <p id="profile-company" class="muted">—</p>
+    </div>
     <div class="profile-status" id="profile-status"></div>
   </header>
   <main class="profile-shell">
@@ -28,12 +31,16 @@
       </article>
     </section>
     <section class="profile-section">
-      <h2>Playbook steps</h2>
-      <div id="profile-playbook" class="playbook-list"></div>
+      <h2>Next action</h2>
+      <p id="profile-next-action">Loading…</p>
     </section>
     <section class="profile-section">
       <h2>Tasks</h2>
       <div id="profile-tasks" class="task-list"></div>
+    </section>
+    <section class="profile-section">
+      <h2>Playbook steps</h2>
+      <div id="profile-playbook" class="playbook-list"></div>
     </section>
   </main>
   <script src="common.js"></script>

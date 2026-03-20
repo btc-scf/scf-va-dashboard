@@ -1,6 +1,12 @@
 const params = new URLSearchParams(window.location.search);
 const leadId = params.get('lead_id');
 
+function formatString(value, fallback = '—') {
+  if (value === null || value === undefined || value === 'undefined') return fallback;
+  if (typeof value === 'string' && !value.trim()) return fallback;
+  return value;
+}
+
 function setStatusChip(text, priority) {
   const chip = document.getElementById('profile-status');
   chip.textContent = text;
@@ -9,7 +15,7 @@ function setStatusChip(text, priority) {
   if (priority === 'urgent') chip.classList.add('priority-urgent');
 }
 
-function renderPlaybookSteps(steps) {
+function renderPlaybookSteps(lead, steps) {
   const container = document.getElementById('profile-playbook');
   container.innerHTML = '';
   if (!steps.length) {
@@ -17,35 +23,59 @@ function renderPlaybookSteps(steps) {
     return;
   }
   steps.forEach(step => {
+    const status = getStoredStepStatus(lead.id, step.id);
     const card = document.createElement('div');
-    card.className = 'playbook-card';
+    card.className = `playbook-card ${status === 'done' ? 'playbook-card-complete' : ''}`;
     card.innerHTML = `
-      <h3>${step.template_step?.step_label || 'Untitled step'}</h3>
-      <p><strong>Action:</strong> ${step.template_step?.action || step.result || '—'}</p>
-      <small>${step.status}</small>
-      <p>${step.notes || 'No notes yet.'}</p>
+      <h3>${step.step_label}. ${step.action}</h3>
+      <p><strong>Medium:</strong> ${step.medium || '—'}</p>
+      <p>${step.message || step.notes || 'Follow the playbook instructions above.'}</p>
+      <small>Status: ${status}</small>
     `;
     container.appendChild(card);
   });
 }
 
-function renderTasks(tasks) {
+function renderTasks(lead, steps) {
   const container = document.getElementById('profile-tasks');
   container.innerHTML = '';
-  if (!tasks.length) {
+  if (!steps.length) {
     container.innerHTML = '<p class="muted">No tasks created yet.</p>';
     return;
   }
-  tasks.forEach(task => {
+  steps.forEach(step => {
+    const status = getStoredStepStatus(lead.id, step.id);
     const row = document.createElement('div');
-    row.className = 'task-row';
+    row.className = `task-row ${status === 'done' ? 'task-row-done' : ''}`;
     row.innerHTML = `
-      <h3>${task.title}</h3>
-      <p>${task.description || 'No details yet.'}</p>
-      <small>Status: ${task.status} · Priority: ${task.priority} · Due: ${task.due_at ? new Date(task.due_at).toLocaleDateString() : '—'}</small>
+      <h3>${step.step_label}. ${step.action}</h3>
+      <p>${step.medium || '—'}</p>
+      <small>Status: ${status}</small>
     `;
+    const button = document.createElement('button');
+    button.className = 'pill-button';
+    button.textContent = status === 'done' ? 'Undo' : 'Mark done';
+    button.addEventListener('click', () => {
+      const nextStatus = status === 'done' ? 'pending' : 'done';
+      setStoredStepStatus(lead.id, step.id, nextStatus);
+      renderTasks(lead, steps);
+      renderPlaybookSteps(lead, steps);
+      renderNextAction(lead, steps);
+    });
+    row.appendChild(button);
     container.appendChild(row);
   });
+}
+
+function renderNextAction(lead, steps) {
+  const next = steps.find(step => getStoredStepStatus(lead.id, step.id) !== 'done');
+  const nextBlock = document.getElementById('profile-next-action');
+  if (!next) {
+    nextBlock.textContent = 'All actions complete—move to the next lead.';
+    return;
+  }
+  const due = computeDueDateForStep(lead, next);
+  nextBlock.textContent = `${next.step_label}. ${next.action}${due ? ' · due ' + due.toLocaleDateString() : ''}`;
 }
 
 async function initProfile() {
@@ -57,14 +87,15 @@ async function initProfile() {
   const lead = await fetchLeadById(leadId);
   if (!lead) return;
   document.getElementById('profile-name').textContent = lead.full_name;
+  document.getElementById('profile-company').textContent = `${formatString(lead.title, 'Coach')} · ${formatString(lead.company, 'Independent')}`;
   setStatusChip(lead.status || 'Unknown', lead.priority);
   document.getElementById('profile-why').textContent = lead.why_this_lead || '—';
   document.getElementById('profile-angle').textContent = lead.angle_summary || '—';
   document.getElementById('profile-hooks').textContent = lead.personalization_hooks || '—';
-  const tasks = await fetchTasksForLead(leadId);
-  renderTasks(tasks);
-  const steps = await fetchLeadPlaybookSteps(leadId);
-  renderPlaybookSteps(steps);
+  const steps = prepareLeadSteps(lead, await fetchLeadPlaybookSteps(lead.full_name || lead.name));
+  renderNextAction(lead, steps);
+  renderTasks(lead, steps);
+  renderPlaybookSteps(lead, steps);
 }
 
 initProfile();
