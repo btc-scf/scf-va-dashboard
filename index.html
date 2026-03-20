@@ -9,7 +9,7 @@
 <body>
   <header>
     <h1>SimpleCoachFunnel VA Dashboard</h1>
-    <p>A lightweight dashboard summarizing every lead, the VA playbook, and quick navigation to the trackers.</p>
+    <p>A live overview of every prospect, the current task board, and actionable playbook steps.</p>
   </header>
   <main>
     <section class="summary">
@@ -20,6 +20,16 @@
       <div>
         <h2>Lead sheet links</h2>
         <p id="linked-leads">—</p>
+      </div>
+      <div class="controls">
+        <button id="refresh-data-btn" class="control-button">Refresh data</button>
+        <a class="control-button control-link" href="https://docs.google.com/spreadsheets/d/1IdCua919BwTqs-dwU1lcO1_ldE4Pp_mbIToGqLWZLuU/edit?usp=drivesdk" target="_blank" rel="noreferrer">Open VA tasklist</a>
+      </div>
+    </section>
+    <section>
+      <h2>Task board</h2>
+      <div class="task-board" id="task-board">
+        <p class="muted">Loading task cards…</p>
       </div>
     </section>
     <section>
@@ -48,7 +58,7 @@
     </section>
     <section>
       <h2>Quick instructions</h2>
-      <p>Use the + button in the VA tasklist sheet to add new actions. Each row links to its dossier and the lead tracker so you never have to guess.</p>
+      <p>Use the VA tasklist and playbook cards as your master workflow. Expand any card to see supplementary notes, then follow steps A/B/C to keep the outreach steady.</p>
       <ul class="tips">
         <li>Step A: Review the dossier and lead tracker row.</li>
         <li>Step B: Reach out via email with the tailored copy in the playbook.</li>
@@ -57,7 +67,7 @@
     </section>
   </main>
   <footer>
-    <p>Generated on demand from the SCF lead and VA tracker.</p>
+    <p>Generated on demand from the SCF lead tracker and Supabase backend.</p>
   </footer>
   <script src="app.js"></script>
 </body>
