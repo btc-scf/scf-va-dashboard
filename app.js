@@ -101,11 +101,20 @@ async function fetchLeads() {
       headers: supabaseHeaders
     });
     if (!response.ok) throw new Error('Supabase lead fetch failed');
-    return await response.json();
+    const data = await response.json();
+    return data.map(row => ({
+      Client: row.name,
+      Offer: row.offer,
+      Funnel: row.funnel_type,
+      'Link to lead sheet': row.lead_sheet_link,
+      'Doc Link': row.doc_link,
+      'VA Task': row.va_task,
+      Notes: row.notes
+    }));
   } catch (error) {
     console.warn(error);
     const fallback = await fetch('data/client-outreach-plan.json');
-    return fallback.json();
+    return await fallback.json();
   }
 }
 
