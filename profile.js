@@ -89,82 +89,33 @@ async function renderProfileNotes(lead) {
 function renderProfileLinks(lead) {
   if (!profileLinks) return;
   const links = [];
-  if (lead.email) links.push({ label: 'Email', href: `mailto:${lead.email}` });
-  if (lead.phone) links.push({ label: 'Call', href: `tel:${lead.phone}` });
-  if (lead.linkedin_url) links.push({ label: 'LinkedIn', href: normalizeLink(lead.linkedin_url) });
-  if (lead.company_website) links.push({ label: 'Website', href: normalizeLink(lead.company_website) });
-  if (lead.lead_sheet_link) links.push({ label: 'Lead sheet', href: lead.lead_sheet_link });
-  if (lead.doc_link) links.push({ label: 'Lead doc', href: lead.doc_link });
+  const seen = new Set();
+  const addLink = (label, href) => {
+    if (!href) return;
+    const key = `${label}-${href}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    links.push({ label, href });
+  };
+  if (lead.email) addLink('Email', `mailto:${lead.email}`);
+  if (lead.phone) addLink('Call', `tel:${lead.phone}`);
+  if (lead.linkedin_url) addLink('LinkedIn', normalizeLink(lead.linkedin_url));
+  if (lead.company_website) addLink('Website', normalizeLink(lead.company_website));
+  if (lead.lead_sheet_link) addLink('Lead sheet', lead.lead_sheet_link);
+  if (lead.doc_link) addLink('Lead doc', lead.doc_link);
   const dossier = getDossierForLead(lead);
-  if (dossier?.docLink) links.push({ label: 'Dossier doc', href: dossier.docLink });
+  if (dossier?.docLink) addLink('Dossier doc', dossier.docLink);
+  if (dossier?.contact) {
+    const contact = dossier.contact;
+    contact.emails?.forEach(email => addLink('Email', `mailto:${email}`));
+    contact.phones?.forEach(phone => addLink('Call', `tel:${phone}`));
+    contact.links?.forEach(item => addLink(item.label || 'Link', item.url));
+  }
   if (!links.length) {
-    profileLinks.innerHTML = '<p class=\"muted\">No links stored.</p>';
+    profileLinks.innerHTML = '<p class="muted">No links stored.</p>';
     return;
   }
-  profileLinks.innerHTML = links.map(link => `<a class=\"link-chip\" href=\"${link.href}\" target=\"_blank\">${link.label}</a>`).join('');
-}
-
-function renderPlaybookSteps(lead, steps) {
-  const container = document.getElementById('profile-playbook');
-  container.innerHTML = '';
-  if (!steps.length) {
-    container.innerHTML = '<p class="muted">No playbook steps attached.</p>';
-    return;
-  }
-  steps.forEach(step => {
-    const status = getStoredStepStatus(lead.id, step.id);
-    const card = document.createElement('div');
-    card.className = `playbook-card ${status === 'done' ? 'playbook-card-complete' : ''}`;
-    card.innerHTML = `
-      <h3>${step.step_label}. ${step.action}</h3>
-      <p><strong>Medium:</strong> ${step.medium || '—'}</p>
-      <p>${step.message || step.notes || 'Follow the playbook instructions above.'}</p>
-      <small>Status: ${status}</small>
-    `;
-    container.appendChild(card);
-  });
-}
-
-function renderTasks(lead, steps) {
-  const container = document.getElementById('profile-tasks');
-  container.innerHTML = '';
-  if (!steps.length) {
-    container.innerHTML = '<p class="muted">No tasks created yet.</p>';
-    return;
-  }
-  steps.forEach(step => {
-    const status = getStoredStepStatus(lead.id, step.id);
-    const row = document.createElement('div');
-    row.className = `task-row ${status === 'done' ? 'task-row-done' : ''}`;
-    row.innerHTML = `
-      <h3>${step.step_label}. ${step.action}</h3>
-      <p>${step.medium || '—'}</p>
-      <small>Status: ${status}</small>
-    `;
-    const button = document.createElement('button');
-    button.className = 'pill-button';
-    button.textContent = status === 'done' ? 'Undo' : 'Mark done';
-    button.addEventListener('click', () => {
-      const nextStatus = status === 'done' ? 'pending' : 'done';
-      setStoredStepStatus(lead.id, step.id, nextStatus);
-      renderTasks(lead, steps);
-      renderPlaybookSteps(lead, steps);
-      renderNextAction(lead, steps);
-    });
-    row.appendChild(button);
-    container.appendChild(row);
-  });
-}
-
-function renderNextAction(lead, steps) {
-  const next = steps.find(step => getStoredStepStatus(lead.id, step.id) !== 'done');
-  const nextBlock = document.getElementById('profile-next-action');
-  if (!next) {
-    nextBlock.textContent = 'All actions complete—move to the next lead.';
-    return;
-  }
-  const due = computeDueDateForStep(lead, next);
-  nextBlock.textContent = `${next.step_label}. ${next.action}${due ? ' · due ' + due.toLocaleDateString() : ''}`;
+  profileLinks.innerHTML = links.map(link => `<a class="link-chip" href="${link.href}" target="_blank">${link.label}</a>`).join('');
 }
 
 async function initProfile() {

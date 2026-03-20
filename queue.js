@@ -124,6 +124,11 @@ function updateDetailPanel(lead) {
   if (lead.phone) contactParts.push(`Phone: ${lead.phone}`);
   if (lead.linkedin_url) contactParts.push('LinkedIn profile');
   if (lead.location) contactParts.push(lead.location);
+  const dossier = getDossierForLead(lead);
+  if (contactParts.length === 0 && dossier?.contact) {
+    dossier.contact.emails?.forEach(email => contactParts.push(`Email: ${email}`));
+    dossier.contact.phones?.forEach(phone => contactParts.push(`Phone: ${phone}`));
+  }
   detailContact.textContent = contactParts.join(' · ') || 'No contact info yet. Use dossier + sheet links.';
   detailWhy.textContent = formatString(lead.why_this_lead, 'Fill in why this lead matters.');
   detailAngle.textContent = formatString(lead.angle_summary, 'Specify the outreach angle.');
@@ -208,21 +213,34 @@ async function renderNotes(leadId) {
 function renderLinkChips(lead) {
   if (!detailLinks) return;
   const links = [];
-  if (lead.email) links.push({ label: 'Email', href: `mailto:${lead.email}` });
-  if (lead.phone) links.push({ label: 'Call', href: `tel:${lead.phone}` });
-  if (lead.linkedin_url) links.push({ label: 'LinkedIn', href: normalizeLink(lead.linkedin_url) });
-  if (lead.company_website) links.push({ label: 'Website', href: normalizeLink(lead.company_website) });
-  if (lead.lead_sheet_link) links.push({ label: 'Lead sheet', href: lead.lead_sheet_link });
-  if (lead.doc_link) links.push({ label: 'Lead doc', href: lead.doc_link });
+  const seen = new Set();
+  const addLink = (label, href) => {
+    if (!href) return;
+    const key = `${label}-${href}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    links.push({ label, href });
+  };
+  if (lead.email) addLink('Email', `mailto:${lead.email}`);
+  if (lead.phone) addLink('Call', `tel:${lead.phone}`);
+  if (lead.linkedin_url) addLink('LinkedIn', normalizeLink(lead.linkedin_url));
+  if (lead.company_website) addLink('Website', normalizeLink(lead.company_website));
+  if (lead.lead_sheet_link) addLink('Lead sheet', lead.lead_sheet_link);
+  if (lead.doc_link) addLink('Lead doc', lead.doc_link);
   const dossier = getDossierForLead(lead);
-  if (dossier?.docLink) links.push({ label: 'Dossier doc', href: dossier.docLink });
+  if (dossier?.docLink) addLink('Dossier doc', dossier.docLink);
+  if (dossier?.contact) {
+    const contact = dossier.contact;
+    contact.emails?.forEach(email => addLink('Email', `mailto:${email}`));
+    contact.phones?.forEach(phone => addLink('Call', `tel:${phone}`));
+    contact.links?.forEach(item => addLink(item.label || 'Link', item.url));
+  }
   if (!links.length) {
-    detailLinks.innerHTML = '<p class=\"muted\">No links stored.</p>';
+    detailLinks.innerHTML = '<p class="muted">No links stored.</p>';
     return;
   }
-  detailLinks.innerHTML = links.map(link => `<a class=\"link-chip\" href=\"${link.href}\" target=\"_blank\">${link.label}</a>`).join('');
+  detailLinks.innerHTML = links.map(link => `<a class="link-chip" href="${link.href}" target="_blank">${link.label}</a>`).join('');
 }
-
 function renderTaskList(lead) {
   const steps = getStepsForLead(lead);
   taskList.innerHTML = '';
