@@ -1,3 +1,4 @@
+const leadTrackerUrl = 'https://docs.google.com/spreadsheets/d/1IdCua919BwTqs-dwU1lcO1_ldE4Pp_mbIToGqLWZLuU/edit?usp=drivesdk';
 const supabaseUrl = 'https://hvouvsqxoxukgoefpuok.supabase.co/rest/v1';
 const supabaseKey = 'sb_publishable_wRSdpAX-xp4kGo-ZRcOLVQ_ngaWyMVW';
 const supabaseHeaders = {
@@ -186,6 +187,9 @@ function setupControls() {
     btn.disabled = true;
     await initDashboard();
     btn.disabled = false;
+  });
+  document.getElementById('open-playbook').addEventListener('click', () => {
+    window.open(leadTrackerUrl, '_blank');
   });
 }
 
