@@ -119,30 +119,42 @@ function renderProfileLinks(lead) {
 }
 
 async function initProfile() {
+  const nameEl = document.getElementById('profile-name');
+  const whyEl = document.getElementById('profile-why');
   if (!leadId) {
-    document.getElementById('profile-name').textContent = 'No lead selected';
-    document.getElementById('profile-why').textContent = 'Pass ?lead_id= to load a profile.';
+    if (nameEl) nameEl.textContent = 'No lead selected';
+    if (whyEl) whyEl.textContent = 'Pass ?lead_id= to load a profile.';
     return;
   }
-  const lead = await fetchLeadById(leadId);
-  if (!lead) return;
-  document.getElementById('profile-name').textContent = lead.full_name;
-  document.getElementById('profile-company').textContent = `${formatString(lead.title, 'Coach')} · ${formatString(lead.company, 'Independent')}`;
-  setStatusChip(lead.status || 'Unknown', lead.priority);
-  document.getElementById('profile-why').textContent = lead.why_this_lead || '—';
-  document.getElementById('profile-angle').textContent = lead.angle_summary || '—';
-  document.getElementById('profile-hooks').textContent = lead.personalization_hooks || '—';
-  const [_, playbookSteps] = await Promise.all([
-    fetchDossiers(),
-    fetchLeadPlaybookSteps(lead.full_name || lead.name)
-  ]);
-  const steps = prepareLeadSteps(lead, playbookSteps);
-  renderNextAction(lead, steps);
-  renderTasks(lead, steps);
-  renderPlaybookSteps(lead, steps);
-  renderDossierSection(lead);
-  renderProfileLinks(lead);
-  renderProfileNotes(lead);
+  try {
+    const lead = await fetchLeadById(leadId);
+    if (!lead) {
+      if (nameEl) nameEl.textContent = 'Lead not found';
+      if (whyEl) whyEl.textContent = 'Reopen the profile from the lead queue.';
+      return;
+    }
+    nameEl.textContent = lead.full_name;
+    document.getElementById('profile-company').textContent = `${formatString(lead.title, 'Coach')} · ${formatString(lead.company, 'Independent')}`;
+    setStatusChip(lead.status || 'Unknown', lead.priority);
+    if (whyEl) whyEl.textContent = lead.why_this_lead || '—';
+    document.getElementById('profile-angle').textContent = lead.angle_summary || '—';
+    document.getElementById('profile-hooks').textContent = lead.personalization_hooks || '—';
+    const [_, playbookSteps] = await Promise.all([
+      fetchDossiers(),
+      fetchLeadPlaybookSteps(lead.full_name || lead.name)
+    ]);
+    const steps = prepareLeadSteps(lead, playbookSteps);
+    renderNextAction(lead, steps);
+    renderTasks(lead, steps);
+    renderPlaybookSteps(lead, steps);
+    renderDossierSection(lead);
+    renderProfileLinks(lead);
+    renderProfileNotes(lead);
+  } catch (error) {
+    console.error('Failed to load profile', error);
+    if (nameEl) nameEl.textContent = 'Error loading profile';
+    if (whyEl) whyEl.textContent = 'Please refresh or reopen from the lead queue.';
+  }
 }
 
 initProfile();
