@@ -111,8 +111,11 @@ async function initProfile() {
   document.getElementById('profile-why').textContent = lead.why_this_lead || '—';
   document.getElementById('profile-angle').textContent = lead.angle_summary || '—';
   document.getElementById('profile-hooks').textContent = lead.personalization_hooks || '—';
-  await fetchDossiers();
-  const steps = prepareLeadSteps(lead, await fetchLeadPlaybookSteps(lead.full_name || lead.name));
+  const [_, playbookSteps] = await Promise.all([
+    fetchDossiers(),
+    fetchLeadPlaybookSteps(lead.full_name || lead.name)
+  ]);
+  const steps = prepareLeadSteps(lead, playbookSteps);
   renderNextAction(lead, steps);
   renderTasks(lead, steps);
   renderPlaybookSteps(lead, steps);

@@ -103,8 +103,7 @@ function renderCards(cards) {
 
 async function loadTasksView() {
   try {
-    await fetchDossiers();
-    const [leads, playbook] = await Promise.all([fetchLeads(), fetchPlaybookSteps()]);
+    const [_, leads, playbook] = await Promise.all([fetchDossiers(), fetchLeads(), fetchPlaybookSteps()]);
     leadsCache = leads.filter(Boolean);
     playbookCache = playbook;
     indexPlaybookCache();

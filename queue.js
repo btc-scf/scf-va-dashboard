@@ -251,8 +251,7 @@ function filterLeads(leads) {
 
 async function loadQueue() {
   try {
-    await fetchDossiers();
-    const [leads, playbook] = await Promise.all([fetchLeads(), fetchPlaybookSteps()]);
+    const [_, leads, playbook] = await Promise.all([fetchDossiers(), fetchLeads(), fetchPlaybookSteps()]);
     allLeads = leads.filter(Boolean);
     allPlaybookSteps = playbook;
     indexPlaybookSteps();
