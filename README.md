@@ -6,12 +6,13 @@ A very lightweight dashboard that surfaces the lead tracker, dossier links, and 
 
 - **Lead overview:** Shows every client, their offer, funnel, and the VA task associated with them.
 - **Links:** Each row links to the lead tracker row and the dossier so the VA never has to hunt for context.
-- **Quick tips:** The page summarizes the three-step workflow for reaching out.
+- **Supabase integration:** Live data now comes from Supabase so the dashboard always reflects the latest playbook.
 
 ## Data
 
-- The table is sourced from `data/client-outreach-plan.json`, which is exported from `client-outreach-plan.csv` in the workspace.
-- Whenever the CSV is updated in the repository, run the JSON export script to keep the dashboard in sync.
+- Leads are sourced from the `leads` table in Supabase (mirroring `client-outreach-plan.csv`).
+- Playbook steps live in the `playbook_steps` table, which feeds the “Live playbook steps” section.
+- The static JSON in `data/client-outreach-plan.json` remains as a fallback if Supabase is unavailable.
 
 ## Development
 
@@ -24,13 +25,19 @@ A very lightweight dashboard that surfaces the lead tracker, dossier links, and 
 
 ## Deployment
 
-This directory is published on Netlify at the SCF VA Dashboard site. After editing any HTML/CSS/JS:
+This directory is published on Netlify at the SCF VA Dashboard site:
+- https://scf-va-dashboard.netlify.app
+- https://69bd6fccc469e379798408ee--scf-va-dashboard.netlify.app
 
-1. Commit your changes.
-2. Push to the `btc-scf/scf-va-dashboard` repository (Set `GIT_HTTP_EXTRA_HEADER="AUTHORIZATION: bearer $(cat /tmp/gh_token)" git push`).
+Whenever you make changes:
+1. Update the Supabase data if necessary.
+2. Commit and push to `btc-scf/scf-va-dashboard`.
 3. Netlify redeploys automatically.
 
-## Future work
+## Supabase
 
-- Connect to Supabase or another backend so that the dashboard can show live status updates and VA notes.
-- Move this into the planned web app once the backend arrives.
+Use the publishable API key to read the tables:<br>
+`https://hvouvsqxoxukgoefpuok.supabase.co/rest/v1/leads`<br>
+`https://hvouvsqxoxukgoefpuok.supabase.co/rest/v1/playbook_steps`
+
+Keep the secret key safe—it's used here to insert data and can also seed new back-end services once we build them out.

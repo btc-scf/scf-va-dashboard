@@ -94,3 +94,27 @@ footer {
     padding: 0.65rem;
   }
 }
+.playbook-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+.playbook-card {
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  min-height: 160px;
+}
+.playbook-card h3 {
+  margin: 0 0 0.4rem;
+  font-size: 1rem;
+}
+.playbook-card p {
+  margin: 0.3rem 0;
+  line-height: 1.4;
+}
+.muted {
+  color: rgba(226, 232, 240, 0.6);
+}
