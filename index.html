@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SimpleCoachFunnel VA Dashboard</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <h1>SimpleCoachFunnel VA Dashboard</h1>
+    <p>A lightweight dashboard summarizing every lead, the VA playbook, and quick navigation to the trackers.</p>
+  </header>
+  <main>
+    <section class="summary">
+      <div>
+        <h2>Total leads</h2>
+        <p id="total-leads">—</p>
+      </div>
+      <div>
+        <h2>Lead sheet links</h2>
+        <p id="linked-leads">—</p>
+      </div>
+    </section>
+    <section>
+      <h2>Lead overview</h2>
+      <div class="table-wrap">
+        <table id="lead-table">
+          <thead>
+            <tr>
+              <th>Client</th>
+              <th>Offer</th>
+              <th>Funnel</th>
+              <th>Lead sheet</th>
+              <th>Dossier</th>
+              <th>VA task</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+    <section>
+      <h2>Quick instructions</h2>
+      <p>Use the + button in the VA tasklist sheet to add new actions. Each row links to its dossier and the lead tracker so you never have to guess.</p>
+      <ul class="tips">
+        <li>Step A: Review the dossier and lead tracker row.</li>
+        <li>Step B: Reach out via email with the tailored copy in the playbook.</li>
+        <li>Step C: Follow up on social (comment or DM) referencing the Funnel Type.</li>
+      </ul>
+    </section>
+  </main>
+  <footer>
+    <p>Generated on demand from the SCF lead and VA tracker.</p>
+  </footer>
+  <script src="app.js"></script>
+</body>
+</html>
