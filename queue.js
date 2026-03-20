@@ -85,7 +85,10 @@ function renderTable(leads) {
       <td>${formatString(lead.priority)}</td>
       <td>${nextAction ? `${nextAction.title}${nextAction.due_at ? ' · due ' + nextAction.due_at.toLocaleDateString() : ''}` : 'No action yet'}</td>
     `;
-    tr.addEventListener('click', () => selectLead(lead));
+    tr.addEventListener('click', () => {
+      selectLead(lead);
+      window.open(`profile.html?lead_id=${lead.id}`, 'lead-profile');
+    });
     queueBody.appendChild(tr);
   });
   highlightSelectedRow();
@@ -154,18 +157,39 @@ function refreshAfterStatusChange(lead) {
 }
 
 async function renderNotes(leadId) {
-  const notes = await fetchLeadNotes(leadId);
+  const remoteNotes = await fetchLeadNotes(leadId);
+  const localNotes = getStoredNotes(leadId).map(entry => ({ ...entry, source: 'local' }));
+  const merged = [...localNotes, ...remoteNotes.map(n => ({ ...n, source: 'remote' }))];
+  merged.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   notesContainer.innerHTML = '';
-  if (!notes.length) {
-    notesContainer.textContent = 'No notes yet. Capture objections or learnings in the tracker.';
-    return;
-  }
-  notes.forEach(note => {
-    const div = document.createElement('div');
-    div.className = 'task-row';
-    div.innerHTML = `<p>${note.body}</p><small>${note.note_type || 'general'} · ${new Date(note.created_at).toLocaleString()}</small>`;
-    notesContainer.appendChild(div);
+  const form = document.createElement('form');
+  form.className = 'note-form';
+  form.innerHTML = `
+    <textarea placeholder="Log a quick note"></textarea>
+    <button type="submit" class="pill-button">Add note</button>
+  `;
+  form.addEventListener('submit', event => {
+    event.preventDefault();
+    const textarea = form.querySelector('textarea');
+    const value = textarea.value.trim();
+    if (!value) return;
+    addStoredNote(leadId, value);
+    textarea.value = '';
+    renderNotes(leadId);
   });
+  notesContainer.appendChild(form);
+  const list = document.createElement('div');
+  if (!merged.length) {
+    list.innerHTML = '<p class="muted">No notes yet.</p>';
+  } else {
+    merged.forEach(note => {
+      const div = document.createElement('div');
+      div.className = 'note-item';
+      div.innerHTML = `<p>${note.body}</p><small>${new Date(note.created_at).toLocaleString()}</small>`;
+      list.appendChild(div);
+    });
+  }
+  notesContainer.appendChild(list);
 }
 
 function renderLinkChips(lead) {

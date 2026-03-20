@@ -2,6 +2,7 @@ const params = new URLSearchParams(window.location.search);
 const leadId = params.get('lead_id');
 const dossierEl = document.getElementById('profile-dossier');
 const profileLinks = document.getElementById('profile-links');
+const profileNotes = document.getElementById('profile-notes');
 
 function formatString(value, fallback = '—') {
   if (value === null || value === undefined || value === 'undefined') return fallback;
@@ -33,6 +34,43 @@ function renderDossierSection(lead) {
     `;
   }
   dossierEl.innerHTML = html;
+}
+
+async function renderProfileNotes(lead) {
+  if (!profileNotes) return;
+  const remoteNotes = await fetchLeadNotes(lead.id);
+  const localNotes = getStoredNotes(lead.id).map(entry => ({ ...entry, source: 'local' }));
+  const merged = [...localNotes, ...remoteNotes.map(n => ({ ...n, source: 'remote' }))];
+  merged.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  profileNotes.innerHTML = '';
+  const form = document.createElement('form');
+  form.className = 'note-form';
+  form.innerHTML = `
+    <textarea placeholder="Log a quick note"></textarea>
+    <button type="submit" class="pill-button">Add note</button>
+  `;
+  form.addEventListener('submit', event => {
+    event.preventDefault();
+    const textarea = form.querySelector('textarea');
+    const value = textarea.value.trim();
+    if (!value) return;
+    addStoredNote(lead.id, value);
+    textarea.value = '';
+    renderProfileNotes(lead);
+  });
+  profileNotes.appendChild(form);
+  const list = document.createElement('div');
+  if (!merged.length) {
+    list.innerHTML = '<p class="muted">No notes yet.</p>';
+  } else {
+    merged.forEach(note => {
+      const div = document.createElement('div');
+      div.className = 'note-item';
+      div.innerHTML = `<p>${note.body}</p><small>${new Date(note.created_at).toLocaleString()}</small>`;
+      list.appendChild(div);
+    });
+  }
+  profileNotes.appendChild(list);
 }
 
 function renderProfileLinks(lead) {
@@ -140,6 +178,7 @@ async function initProfile() {
   renderPlaybookSteps(lead, steps);
   renderDossierSection(lead);
   renderProfileLinks(lead);
+  renderProfileNotes(lead);
 }
 
 initProfile();

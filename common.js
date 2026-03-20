@@ -85,6 +85,9 @@ async function fetchLeadNotes(leadId) {
 
 const TASK_STATUS_KEY = 'scfTaskProgress';
 let inMemoryTaskStore = {};
+const NOTE_STORE_KEY = 'scfLeadNotes';
+let inMemoryNoteStore = {};
+
 
 function readTaskStatusStore() {
   if (typeof window === 'undefined' || typeof window.localStorage === 'undefined') {
@@ -125,6 +128,39 @@ function clearStoredTasksForLead(leadId) {
     delete store[leadId];
     writeTaskStatusStore(store);
   }
+}
+
+function readNoteStore() {
+  if (typeof window === 'undefined' || typeof window.localStorage === 'undefined') {
+    return inMemoryNoteStore;
+  }
+  try {
+    const raw = window.localStorage.getItem(NOTE_STORE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch (error) {
+    console.warn('Unable to read note store', error);
+    return {};
+  }
+}
+
+function writeNoteStore(store) {
+  if (typeof window === 'undefined' || typeof window.localStorage === 'undefined') {
+    inMemoryNoteStore = store;
+    return;
+  }
+  window.localStorage.setItem(NOTE_STORE_KEY, JSON.stringify(store));
+}
+
+function getStoredNotes(leadId) {
+  const store = readNoteStore();
+  return store?.[leadId] || [];
+}
+
+function addStoredNote(leadId, body) {
+  const store = readNoteStore();
+  if (!store[leadId]) store[leadId] = [];
+  store[leadId].push({ body, created_at: new Date().toISOString() });
+  writeNoteStore(store);
 }
 
 const DEFAULT_TASK_BLUEPRINT = [
