@@ -55,3 +55,25 @@ async function fetchLeadPlaybookSteps(leadId) {
   if (!response.ok) throw new Error('Failed to load playbook steps');
   return response.json();
 }
+
+async function completeTask(taskId) {
+  const response = await fetch(`${supabaseUrl}/tasks?id=eq.${taskId}`, {
+    method: 'PATCH',
+    headers: {
+      ...supabaseHeaders,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      status: 'done',
+      completed_at: new Date().toISOString()
+    })
+  });
+  if (!response.ok) throw new Error('Failed to mark task done');
+  return response.json();
+}
+
+async function fetchLeadNotes(leadId) {
+  const response = await fetch(`${supabaseUrl}/lead_notes?lead_id=eq.${leadId}&select=*`, { headers: supabaseHeaders });
+  if (!response.ok) throw new Error('Failed to load notes');
+  return response.json();
+}
