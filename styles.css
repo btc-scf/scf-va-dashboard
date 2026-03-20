@@ -447,3 +447,23 @@ a {
     align-items: flex-start;
   }
 }
+
+.link-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.link-chip {
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  padding: 0.35rem 0.85rem;
+  background: #fff;
+  font-size: 0.85rem;
+  text-decoration: none;
+  color: #0f172a;
+}
+
+.link-chip:hover {
+  border-color: #94a3b8;
+}

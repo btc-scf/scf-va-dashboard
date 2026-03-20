@@ -1,6 +1,7 @@
 const params = new URLSearchParams(window.location.search);
 const leadId = params.get('lead_id');
 const dossierEl = document.getElementById('profile-dossier');
+const profileLinks = document.getElementById('profile-links');
 
 function formatString(value, fallback = '—') {
   if (value === null || value === undefined || value === 'undefined') return fallback;
@@ -32,6 +33,24 @@ function renderDossierSection(lead) {
     `;
   }
   dossierEl.innerHTML = html;
+}
+
+function renderProfileLinks(lead) {
+  if (!profileLinks) return;
+  const links = [];
+  if (lead.email) links.push({ label: 'Email', href: `mailto:${lead.email}` });
+  if (lead.phone) links.push({ label: 'Call', href: `tel:${lead.phone}` });
+  if (lead.linkedin_url) links.push({ label: 'LinkedIn', href: normalizeLink(lead.linkedin_url) });
+  if (lead.company_website) links.push({ label: 'Website', href: normalizeLink(lead.company_website) });
+  if (lead.lead_sheet_link) links.push({ label: 'Lead sheet', href: lead.lead_sheet_link });
+  if (lead.doc_link) links.push({ label: 'Lead doc', href: lead.doc_link });
+  const dossier = getDossierForLead(lead);
+  if (dossier?.docLink) links.push({ label: 'Dossier doc', href: dossier.docLink });
+  if (!links.length) {
+    profileLinks.innerHTML = '<p class=\"muted\">No links stored.</p>';
+    return;
+  }
+  profileLinks.innerHTML = links.map(link => `<a class=\"link-chip\" href=\"${link.href}\" target=\"_blank\">${link.label}</a>`).join('');
 }
 
 function renderPlaybookSteps(lead, steps) {
@@ -120,6 +139,7 @@ async function initProfile() {
   renderTasks(lead, steps);
   renderPlaybookSteps(lead, steps);
   renderDossierSection(lead);
+  renderProfileLinks(lead);
 }
 
 initProfile();

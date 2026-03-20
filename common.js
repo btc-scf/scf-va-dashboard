@@ -262,3 +262,9 @@ function markdownToHtml(markdownText) {
   if (inList) html += '</ul>';
   return html;
 }
+
+function normalizeLink(url) {
+  if (!url) return null;
+  if (url.startsWith('http')) return url;
+  return `https://${url}`;
+}

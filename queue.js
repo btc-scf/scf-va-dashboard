@@ -15,6 +15,7 @@ const taskList = document.getElementById('detail-tasks');
 const playbookList = document.getElementById('detail-playbook');
 const notesContainer = document.getElementById('detail-notes');
 const dossierContainer = document.getElementById('detail-dossier');
+const detailLinks = document.getElementById('detail-links');
 
 let allLeads = [];
 let allPlaybookSteps = [];
@@ -140,6 +141,7 @@ function updateDetailPanel(lead) {
   renderPlaybook(lead);
   renderNotes(lead.id);
   renderDossier(lead);
+  renderLinkChips(lead);
 }
 
 function refreshAfterStatusChange(lead) {
@@ -164,6 +166,24 @@ async function renderNotes(leadId) {
     div.innerHTML = `<p>${note.body}</p><small>${note.note_type || 'general'} · ${new Date(note.created_at).toLocaleString()}</small>`;
     notesContainer.appendChild(div);
   });
+}
+
+function renderLinkChips(lead) {
+  if (!detailLinks) return;
+  const links = [];
+  if (lead.email) links.push({ label: 'Email', href: `mailto:${lead.email}` });
+  if (lead.phone) links.push({ label: 'Call', href: `tel:${lead.phone}` });
+  if (lead.linkedin_url) links.push({ label: 'LinkedIn', href: normalizeLink(lead.linkedin_url) });
+  if (lead.company_website) links.push({ label: 'Website', href: normalizeLink(lead.company_website) });
+  if (lead.lead_sheet_link) links.push({ label: 'Lead sheet', href: lead.lead_sheet_link });
+  if (lead.doc_link) links.push({ label: 'Lead doc', href: lead.doc_link });
+  const dossier = getDossierForLead(lead);
+  if (dossier?.docLink) links.push({ label: 'Dossier doc', href: dossier.docLink });
+  if (!links.length) {
+    detailLinks.innerHTML = '<p class=\"muted\">No links stored.</p>';
+    return;
+  }
+  detailLinks.innerHTML = links.map(link => `<a class=\"link-chip\" href=\"${link.href}\" target=\"_blank\">${link.label}</a>`).join('');
 }
 
 function renderTaskList(lead) {
