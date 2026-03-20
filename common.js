@@ -26,6 +26,9 @@ function hydrateLeadRow(row) {
   hydrated.Client = name;
   hydrated.Priority = hydrated.priority;
   hydrated.client_name = row.client_name || 'SimpleCoachFunnel';
+  hydrated.why_this_lead = row.why_this_lead || row.notes || 'Consult the dossier for context and pain points.';
+  hydrated.angle_summary = row.angle_summary || row.va_task || 'Use the outreach angle defined in the VA task instructions.';
+  hydrated.personalization_hooks = row.personalization_hooks || row.offer || 'Reference their offer and funnel highlights from the dossier.';
   return hydrated;
 }
 
