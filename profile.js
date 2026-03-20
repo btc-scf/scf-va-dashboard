@@ -153,7 +153,7 @@ async function initProfile() {
   } catch (error) {
     console.error('Failed to load profile', error);
     if (nameEl) nameEl.textContent = 'Error loading profile';
-    if (whyEl) whyEl.textContent = 'Please refresh or reopen from the lead queue.';
+    if (whyEl) whyEl.textContent = `Error: ${error.message || 'unknown issue'}`;
   }
 }
 
