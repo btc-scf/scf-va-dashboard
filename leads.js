@@ -44,9 +44,10 @@ function renderTable(leads) {
 
 statusFilter.addEventListener('change', loadLeads);
 priorityFilter.addEventListener('change', loadLeads);
+let searchTimeout;
 searchInput.addEventListener('input', () => {
-  if (this.timeout) clearTimeout(this.timeout);
-  this.timeout = setTimeout(loadLeads, 200);
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(loadLeads, 200);
 });
 
 loadLeads();
