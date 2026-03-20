@@ -3,72 +3,116 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SimpleCoachFunnel VA Dashboard</title>
+  <title>SCF VA Execution Console</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <header>
-    <h1>SimpleCoachFunnel VA Dashboard</h1>
-    <p>A live overview of every prospect, the current task board, and actionable playbook steps.</p>
-  </header>
-  <main>
-    <section class="summary">
-      <div>
-        <h2>Total leads</h2>
-        <p id="total-leads">—</p>
+  <div class="dashboard-layout">
+    <aside class="sidebar">
+      <div class="sidebar-brand">SCF Execution Console</div>
+      <nav>
+        <h3>Workspace</h3>
+        <ul>
+          <li class="active">Clients</li>
+          <li>All Leads</li>
+          <li>Lead Queue</li>
+          <li>My Tasks</li>
+          <li>Overdue</li>
+          <li>Recent Activity</li>
+          <li>Settings</li>
+        </ul>
+      </nav>
+      <div class="sidebar-footer">
+        <small>Supabase project: hvouvsqxoxukgoefpuok</small>
       </div>
-      <div>
-        <h2>Lead sheet links</h2>
-        <p id="linked-leads">—</p>
+    </aside>
+    <div class="main-column">
+      <header class="utility-bar">
+        <div>
+          <input id="lead-search" type="search" placeholder="Search leads, companies, execution notes">
+          <button class="control-button" id="refresh-data-btn">Refresh data</button>
+        </div>
+        <div class="filter-row">
+          <label>Status: <select><option>All</option><option>ready_for_outreach</option><option>new</option></select></label>
+          <label>Priority: <select><option>All</option><option>high</option><option>medium</option></select></label>
+          <button class="control-button control-link" id="open-playbook" type="button">Open VA tasklist</button>
+        </div>
+      </header>
+      <div class="content-area">
+        <section class="summary-grid">
+          <div>
+            <h2>Total leads</h2>
+            <p id="total-leads">—</p>
+          </div>
+          <div>
+            <h2>Lead sheet links</h2>
+            <p id="linked-leads">—</p>
+          </div>
+          <div>
+            <h2>Active tasks</h2>
+            <p id="active-tasks">—</p>
+          </div>
+        </section>
+        <section>
+          <h2>Task board</h2>
+          <div class="task-board" id="task-board">
+            <p class="muted">Loading task cards…</p>
+          </div>
+        </section>
+        <section>
+          <h2>Lead overview</h2>
+          <div class="table-wrap">
+            <table id="lead-table">
+              <thead>
+                <tr>
+                  <th>Client</th>
+                  <th>Offer</th>
+                  <th>Funnel</th>
+                  <th>Lead sheet</th>
+                  <th>Dossier</th>
+                  <th>VA task</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+        <section>
+          <h2>Live playbook steps</h2>
+          <div class="playbook-list" id="playbook-steps">
+            <p class="muted">Loading the latest playbook steps…</p>
+          </div>
+        </section>
+        <section>
+          <h2>Quick instructions</h2>
+          <p>Use the VA tasklist and playbook cards as your master workflow—expand a card, follow Steps A/B/C, and mark progress.</p>
+          <ul class="tips">
+            <li>Step A: Review the dossier and lead tracker row.</li>
+            <li>Step B: Reach out via email with the tailored copy in the playbook.</li>
+            <li>Step C: Follow up on social (comment or DM) referencing the Funnel Type.</li>
+          </ul>
+        </section>
       </div>
-      <div class="controls">
-        <button id="refresh-data-btn" class="control-button">Refresh data</button>
-        <a class="control-button control-link" href="https://docs.google.com/spreadsheets/d/1IdCua919BwTqs-dwU1lcO1_ldE4Pp_mbIToGqLWZLuU/edit?usp=drivesdk" target="_blank" rel="noreferrer">Open VA tasklist</a>
+    </div>
+    <aside class="detail-rail" id="detail-rail">
+      <div class="rail-header">
+        <h3>Lead detail</h3>
+        <p id="detail-subtitle">Select a lead to see the recommended angle and next action.</p>
       </div>
-    </section>
-    <section>
-      <h2>Task board</h2>
-      <div class="task-board" id="task-board">
-        <p class="muted">Loading task cards…</p>
+      <div class="detail-card" id="detail-angle">
+        <h4>Why this lead?</h4>
+        <p id="detail-why">No lead selected yet.</p>
       </div>
-    </section>
-    <section>
-      <h2>Lead overview</h2>
-      <div class="table-wrap">
-        <table id="lead-table">
-          <thead>
-            <tr>
-              <th>Client</th>
-              <th>Offer</th>
-              <th>Funnel</th>
-              <th>Lead sheet</th>
-              <th>Dossier</th>
-              <th>VA task</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
+      <div class="detail-card" id="detail-angle-summary">
+        <h4>Recommended angle</h4>
+        <p id="detail-angle-summary">—</p>
       </div>
-    </section>
-    <section>
-      <h2>Live playbook steps</h2>
-      <div class="playbook-list" id="playbook-steps">
-        <p class="muted">Loading the latest playbook steps…</p>
+      <div class="detail-card" id="detail-next-task">
+        <h4>Next task</h4>
+        <p id="detail-next-task">—</p>
       </div>
-    </section>
-    <section>
-      <h2>Quick instructions</h2>
-      <p>Use the VA tasklist and playbook cards as your master workflow. Expand any card to see supplementary notes, then follow steps A/B/C to keep the outreach steady.</p>
-      <ul class="tips">
-        <li>Step A: Review the dossier and lead tracker row.</li>
-        <li>Step B: Reach out via email with the tailored copy in the playbook.</li>
-        <li>Step C: Follow up on social (comment or DM) referencing the Funnel Type.</li>
-      </ul>
-    </section>
-  </main>
-  <footer>
-    <p>Generated on demand from the SCF lead tracker and Supabase backend.</p>
-  </footer>
+    </aside>
+  </div>
   <script src="app.js"></script>
 </body>
 </html>

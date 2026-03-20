@@ -17,6 +17,21 @@ function updateSummary(data) {
   document.getElementById('linked-leads').textContent = data.filter(row => row['Link to lead sheet']).length;
 }
 
+function renderDetailPanel(lead) {
+  if (!lead) {
+    document.getElementById('detail-subtitle').textContent = 'Select a lead to see details.';
+    document.getElementById('detail-why').textContent = 'No lead selected yet.';
+    document.getElementById('detail-angle-summary').textContent = '—';
+    document.getElementById('detail-next-task').textContent = '—';
+    return;
+  }
+  document.getElementById('detail-subtitle').textContent = `${lead.Client} — ${lead.Funnel}`;
+  document.getElementById('detail-why').textContent = lead.Notes || '—';
+  document.getElementById('detail-angle-summary').textContent = lead['VA Task'] || '—';
+  const nextText = lead['Doc Link'] ? 'Execute next task from the VA playbook.' : 'No playbook step assigned yet.';
+  document.getElementById('detail-next-task').textContent = nextText;
+}
+
 function renderTable(data) {
   const tbody = document.querySelector('#lead-table tbody');
   tbody.innerHTML = '';
@@ -54,6 +69,11 @@ function renderTable(data) {
     const taskCell = document.createElement('td');
     taskCell.textContent = row['VA Task'] || '—';
     tr.appendChild(taskCell);
+    tr.addEventListener('click', () => {
+      document.querySelectorAll('#lead-table tr').forEach(r => r.classList.remove('selected'));
+      tr.classList.add('selected');
+      renderDetailPanel(row);
+    });
     tbody.appendChild(tr);
   });
 }
@@ -84,9 +104,7 @@ function renderPlaybookSteps(steps) {
     detail.className = 'playbook-detail';
     detail.textContent = step.notes || 'Tap to expand for more context.';
     card.appendChild(detail);
-    card.addEventListener('click', () => {
-      card.classList.toggle('expanded');
-    });
+    card.addEventListener('click', () => card.classList.toggle('expanded'));
     container.appendChild(card);
   });
 }
@@ -94,11 +112,13 @@ function renderPlaybookSteps(steps) {
 function renderTaskList(steps) {
   const board = document.getElementById('task-board');
   board.innerHTML = '';
-  if (!steps.length) {
+  const tasks = steps.slice(0, 6);
+  document.getElementById('active-tasks').textContent = tasks.length;
+  if (!tasks.length) {
     board.innerHTML = '<p class="muted">Waiting for playbook steps...</p>';
     return;
   }
-  steps.slice(0, 6).forEach(step => {
+  tasks.forEach(step => {
     const card = document.createElement('div');
     card.className = 'task-card';
     card.innerHTML = `
@@ -142,7 +162,7 @@ async function fetchLeads() {
 async function fetchPlaybookSteps() {
   try {
     return await fetchSupabase(
-      'playbook_steps?select=lead_name,step_label,action,medium,message,notes,doc_link&order=lead_name.asc,step_label.asc&limit=12'
+      'playbook_steps?select=lead_name,step_label,action,medium,message,notes&order=lead_name.asc,step_label.asc&limit=12'
     );
   } catch (error) {
     console.warn(error);
@@ -154,6 +174,7 @@ async function initDashboard() {
   const leads = await fetchLeads();
   updateSummary(leads);
   renderTable(leads);
+  renderDetailPanel(null);
   const steps = await fetchPlaybookSteps();
   renderPlaybookSteps(steps);
   renderTaskList(steps);
