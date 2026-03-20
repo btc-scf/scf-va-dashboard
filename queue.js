@@ -185,7 +185,20 @@ async function renderNotes(leadId) {
     merged.forEach(note => {
       const div = document.createElement('div');
       div.className = 'note-item';
-      div.innerHTML = `<p>${note.body}</p><small>${new Date(note.created_at).toLocaleString()}</small>`;
+      const content = document.createElement('div');
+      content.innerHTML = `<p>${note.body}</p><small>${new Date(note.created_at).toLocaleString()}</small>`;
+      div.appendChild(content);
+      if (note.source === 'local') {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'pill-button note-delete';
+        button.textContent = 'Delete';
+        button.addEventListener('click', () => {
+          deleteStoredNote(leadId, note.created_at);
+          renderNotes(leadId);
+        });
+        div.appendChild(button);
+      }
       list.appendChild(div);
     });
   }

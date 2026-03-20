@@ -491,4 +491,17 @@ a {
   padding: 0.6rem;
   background: #ffffff;
   margin-bottom: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.6rem;
+}
+
+.note-delete {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.note-delete:hover {
+  background: #fecaca;
 }

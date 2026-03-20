@@ -163,6 +163,13 @@ function addStoredNote(leadId, body) {
   writeNoteStore(store);
 }
 
+function deleteStoredNote(leadId, createdAt) {
+  const store = readNoteStore();
+  if (!store[leadId]) return;
+  store[leadId] = store[leadId].filter(note => note.created_at !== createdAt);
+  writeNoteStore(store);
+}
+
 const DEFAULT_TASK_BLUEPRINT = [
   {
     step_label: 'A',
