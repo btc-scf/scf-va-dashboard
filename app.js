@@ -1,3 +1,25 @@
+function setupSidebarNav() {
+  const targetMap = {
+    clients: '.summary-grid',
+    'all-leads': '#lead-table',
+    'lead-queue': '#lead-table',
+    'my-tasks': '#task-board',
+    overdue: '#task-board',
+    'recent-activity': '#playbook-steps',
+    settings: '.tips'
+  };
+  document.querySelectorAll('.sidebar nav li[data-target]').forEach(item => {
+    item.addEventListener('click', () => {
+      document.querySelectorAll('.sidebar nav li').forEach(li => li.classList.remove('active'));
+      item.classList.add('active');
+      const target = targetMap[item.dataset.target];
+      if (target) {
+        document.querySelector(target)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+}
+
 const leadTrackerUrl = 'https://docs.google.com/spreadsheets/d/1IdCua919BwTqs-dwU1lcO1_ldE4Pp_mbIToGqLWZLuU/edit?usp=drivesdk';
 const supabaseUrl = 'https://hvouvsqxoxukgoefpuok.supabase.co/rest/v1';
 const supabaseKey = 'sb_publishable_wRSdpAX-xp4kGo-ZRcOLVQ_ngaWyMVW';
@@ -182,6 +204,8 @@ async function initDashboard() {
 }
 
 function setupControls() {
+  setupSidebarNav();
+  
   document.getElementById('refresh-data-btn').addEventListener('click', async () => {
     const btn = document.getElementById('refresh-data-btn');
     btn.disabled = true;
