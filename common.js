@@ -15,7 +15,8 @@ async function fetchLeads(filters = {}) {
   const data = await response.json();
   return data.map(row => ({
     ...row,
-    Client: row.full_name,
+    full_name: row.full_name || row.name,
+    Client: row.full_name || row.name,
     Priority: row.priority || 'medium'
   }));
 }
