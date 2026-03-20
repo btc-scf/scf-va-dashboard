@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SCF Lead Queue</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="simple-page">
+  <header class="secondary-header">
+    <a href="index.html" class="control-link">← Back to dashboard</a>
+    <h1>Lead Queue</h1>
+  </header>
+  <main>
+    <section class="filters">
+      <label>
+        Status
+        <select id="filter-status">
+          <option value="">All</option>
+          <option value="ready_for_outreach">Ready for outreach</option>
+          <option value="new">New</option>
+          <option value="contacted">Contacted</option>
+          <option value="follow_up_due">Follow-up due</option>
+        </select>
+      </label>
+      <label>
+        Priority
+        <select id="filter-priority">
+          <option value="">All</option>
+          <option value="high">High</option>
+          <option value="medium">Medium</option>
+          <option value="low">Low</option>
+        </select>
+      </label>
+      <label>
+        Search
+        <input id="filter-search" type="search" placeholder="Name, company, or angle" />
+      </label>
+    </section>
+    <section class="lead-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Company</th>
+            <th>Status</th>
+            <th>Priority</th>
+            <th>Next Task</th>
+            <th>Owner</th>
+          </tr>
+        </thead>
+        <tbody id="leads-body"></tbody>
+      </table>
+    </section>
+  </main>
+  <script src="common.js"></script>
+  <script src="leads.js"></script>
+</body>
+</html>

@@ -250,3 +250,69 @@ tr:hover {
     align-items: flex-start;
   }
 }
+.simple-page, .simple-page body {
+  background: #010409;
+  color: #e2e8f0;
+  min-height: 100vh;
+}
+.simple-page main {
+  padding: 2rem;
+}
+.secondary-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+  background: #020617;
+}
+.secondary-header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.filters label {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.85rem;
+  color: rgba(226, 232, 240, 0.7);
+}
+.filters input,
+.filters select {
+  margin-top: 0.3rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  background: rgba(148, 163, 184, 0.05);
+  color: inherit;
+}
+.lead-table table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  overflow: hidden;
+}
+.lead-table th,
+.lead-table td {
+  padding: 0.9rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+.lead-table th {
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  color: rgba(226, 232, 240, 0.6);
+}
+.lead-table tr:hover {
+  background: rgba(59, 130, 246, 0.12);
+  cursor: pointer;
+}
+.simple-page .muted {
+  color: rgba(226, 232, 240, 0.5);
+}
