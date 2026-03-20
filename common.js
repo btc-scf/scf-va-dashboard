@@ -14,16 +14,9 @@ async function fetchLeads(filters = {}) {
   if (!response.ok) throw new Error('Failed to load leads');
   const data = await response.json();
   return data.map(row => ({
-    id: row.id,
+    ...row,
     Client: row.full_name,
-    Offer: row.offer,
-    Funnel: row.funnel_type,
-    'Link to lead sheet': row.lead_sheet_link,
-    'Doc Link': row.doc_link,
-    'VA Task': row.angle_summary,
-    Notes: row.why_this_lead,
-    Priority: row.priority,
-    Owner: row.owner_user_id
+    Priority: row.priority || 'medium'
   }));
 }
 
