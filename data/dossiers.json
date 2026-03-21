@@ -374,5 +374,29 @@
         }
       ]
     }
+  },
+  "lucie-ebnerova": {
+    "slug": "lucie-ebnerova",
+    "name": "Lucie Ebnerova (Luvidya)",
+    "content": "\n# Lucie Ebnerova (Luvidya)\n\n## Lead Snapshot\n- **Base**: Luvidya, San Francisco Bay Area matchmaking + dating-coaching studio led by Lucie Ebnerova.\n- **Current funnel**: Consult form + services page + singles events. Site invites visitors to book Lucie or attend Bay Area events but there is no automated lead magnet or paid acquisition engine.\n- **ICP**: Busy SF professionals who want curated introductions, confidence coaching, and polished dating etiquette.\n\n## SCF Core Offer \u2014 \"Bay Area Connection Engine\"\n- **Deliverable**: A hybrid funnel that captures interest via an interactive \"Confidence Code\" quiz, nurtures leads with AI-personalized SMS reminders, and books high-ticket consults for Lucie\u2019s concierge package.\n- **Components**:\n  1. **Lead magnet**: 3-minute matchmaking readiness quiz that tags each visitor (Connector, Strategist, Empath). Quiz output tees up a calendar CTA.\n  2. **Authority ad kit**: Meta + LinkedIn retargeting that reuses her singles-event footage but overlays SCF-crafted copy (\u201cYou still deserve a bespoke matchmaker in a swipe world.\u201d).\n  3. **Sales enablement**: A 5-email nurture + SMS cadence that mirrors her in-person tone and delivers micro-wins before Lucie\u2019s consult.\n\n## Outbound Playbook to Win the Account\n1. **Hook (Day 0)**: Reference the \u201cAchieve Successful Dating\u201d copy block on her homepage and show how we\u2019d convert that section into the quiz experience. Offer a 15-minute teardown call + Figma mock.\n2. **Authority proof (Day 2)**: Send a Loom that overlays her last singles event with our creative concept (\u201cConfidence Code Live\u201d), promise delivery within 7 days of kickoff.\n3. **Scarcity (Day 5)**: \u201cWe\u2019re holding one SF slot to launch your quiz + SMS concierge before the next event cycle. Should we pencil you in?\u201d CTA \u2192 roadmap call.\n\n## VA Execution Flow (after Lucie signs)\n1. **Morning sweep**: Check luvidya.com + IG for new event dates; update `events` table in Supabase.\n2. **Quiz concierge**: Export daily quiz completions \u2192 paste personalized SMS scripts from `/playbooks/luvidya/quiz-scripts.md` into Twilio panel.\n3. **Pipeline logging**: Update dashboard columns (Quiz Tag, Last Touch, Next Action). If \u201cNext Action\u201d empty, assign script block.\n4. **Asset requests**: Every Monday tag Lucie in ClickUp requesting fresh event clips; escalate in Slack if no reply in 24h.\n5. **Friday report**: 5-line Loom covering quiz opt-ins, SMS reply rate, booked consults; email to Lucie before noon PT.\n\n## Contact + Links\n- **Email**: lucie@luvidya.com\n- **Phone**: +1 415-322-9293\n- **Website**: https://www.luvidya.com\n- **LinkedIn**: https://www.linkedin.com/in/lucie-ebnerova\n",
+    "docLink": "",
+    "contact": {
+      "emails": [
+        "lucie@luvidya.com"
+      ],
+      "phones": [
+        "+1 415-322-9293"
+      ],
+      "links": [
+        {
+          "label": "Website",
+          "url": "https://www.luvidya.com"
+        },
+        {
+          "label": "LinkedIn",
+          "url": "https://www.linkedin.com/in/lucie-ebnerova"
+        }
+      ]
+    }
   }
 }
