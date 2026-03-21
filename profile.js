@@ -4,6 +4,73 @@ const dossierEl = document.getElementById('profile-dossier');
 const profileLinks = document.getElementById('profile-links');
 const profileNotes = document.getElementById('profile-notes');
 
+const profileNextEl = document.getElementById('profile-next-action');
+const profileTasksEl = document.getElementById('profile-tasks');
+const profilePlaybookEl = document.getElementById('profile-playbook');
+
+function renderNextAction(lead, steps) {
+  if (!profileNextEl) return;
+  const next = steps.find(step => getStoredStepStatus(lead.id, step.id) !== 'done');
+  if (!next) {
+    profileNextEl.textContent = 'All steps complete. Move to the next lead.';
+    return;
+  }
+  const due = computeDueDateForStep(lead, next);
+  profileNextEl.textContent = `${next.step_label}. ${next.action}${due ? ' · due ' + due.toLocaleDateString() : ''}`;
+}
+
+function renderTasks(lead, steps) {
+  if (!profileTasksEl) return;
+  profileTasksEl.innerHTML = '';
+  if (!steps.length) {
+    profileTasksEl.innerHTML = '<p class="muted">No tasks defined yet.</p>';
+    return;
+  }
+  steps.forEach(step => {
+    const status = getStoredStepStatus(lead.id, step.id);
+    const row = document.createElement('div');
+    row.className = `task-row ${status === 'done' ? 'task-row-done' : ''}`;
+    row.innerHTML = `
+      <div>
+        <strong>${step.step_label}. ${step.action}</strong>
+        <p class="muted">${step.medium || '—'}</p>
+      </div>
+    `;
+    const button = document.createElement('button');
+    button.className = 'pill-button';
+    button.textContent = status === 'done' ? 'Undo' : 'Mark done';
+    button.addEventListener('click', () => {
+      const nextStatus = status === 'done' ? 'pending' : 'done';
+      setStoredStepStatus(lead.id, step.id, nextStatus);
+      renderNextAction(lead, steps);
+      renderTasks(lead, steps);
+      renderPlaybookSteps(lead, steps);
+    });
+    row.appendChild(button);
+    profileTasksEl.appendChild(row);
+  });
+}
+
+function renderPlaybookSteps(lead, steps) {
+  if (!profilePlaybookEl) return;
+  profilePlaybookEl.innerHTML = '';
+  if (!steps.length) {
+    profilePlaybookEl.innerHTML = '<p class="muted">No playbook steps yet.</p>';
+    return;
+  }
+  steps.forEach(step => {
+    const status = getStoredStepStatus(lead.id, step.id);
+    const card = document.createElement('article');
+    card.className = `playbook-card ${status === 'done' ? 'playbook-card-complete' : ''}`;
+    card.innerHTML = `
+      <h3>${step.step_label}. ${step.action}</h3>
+      <p><strong>Medium:</strong> ${step.medium || '—'}</p>
+      <p>${step.message || step.notes || 'Follow the playbook instructions.'}</p>
+    `;
+    profilePlaybookEl.appendChild(card);
+  });
+}
+
 function formatString(value, fallback = '—') {
   if (value === null || value === undefined || value === 'undefined') return fallback;
   if (typeof value === 'string' && !value.trim()) return fallback;
